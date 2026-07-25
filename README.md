@@ -25,19 +25,49 @@ module "security_center" {
 
 A runnable example lives in [`examples/basic`](examples/basic).
 
+## Behaviour worth knowing
+
+- `resource_types` is **required and must be non-empty**. Defender for Cloud
+  pricing is subscription-wide, so a module call with no resource types would
+  apply cleanly and enable no protection at all; that is rejected at plan time
+  rather than silently accepted.
+- `Standard` enables (and bills for) a plan; `Free` disables it. Removing a key
+  from `resource_types` destroys the pricing resource, which the provider
+  implements by resetting that plan to `Free` — i.e. removing an entry turns
+  the plan off.
+- The security contact is validated: the email must be well formed, and at
+  least one of `alert_notifications` / `alerts_to_admins` must remain enabled.
+  A contact with neither is created successfully but never delivers an alert.
+
 ## Requirements
 
-| Name      | Version  |
-|-----------|----------|
-| terraform | >= 1.5   |
-| azurerm   | >= 3.0   |
+| Name      | Version          |
+|-----------|------------------|
+| terraform | >= 1.5           |
+| azurerm   | >= 3.30, < 5.0   |
+
+`azurerm_security_center_contact` only gained the `name` argument in azurerm
+**3.30.0**; on 3.0.0–3.29.0 this module fails `terraform validate`. The `< 5.0`
+ceiling is deliberate — azurerm major releases remove security-center
+resources (4.0 dropped `azurerm_security_center_server_vulnerability_assessment`),
+so 5.x must be opted into knowingly.
 
 ## Inputs
 
-| Name             | Description                                                              | Type          | Default | Required |
-|------------------|--------------------------------------------------------------------------|---------------|---------|:--------:|
-| `resource_types` | Map of resource types to their pricing tier (Free or Standard).          | `map(string)` | `{}`    |    no    |
-| `contact`        | Optional security contact for the subscription.                          | `object`      | `null`  |    no    |
+| Name             | Description                                                     | Type          | Default | Required |
+|------------------|-----------------------------------------------------------------|---------------|---------|:--------:|
+| `resource_types` | Map of resource types to their pricing tier (Free or Standard). | `map(string)` | n/a     |   yes    |
+| `contact`        | Optional security contact for the subscription.                 | `object`      | `null`  |    no    |
+
+### `contact` object
+
+| Attribute             | Type     | Default | Description                                        |
+|-----------------------|----------|---------|----------------------------------------------------|
+| `name`                | `string` | n/a     | Contact name. Required, non-empty.                 |
+| `email`               | `string` | n/a     | Alert destination. Required, must be well formed.  |
+| `phone`               | `string` | `null`  | Optional phone number.                             |
+| `alert_notifications` | `bool`   | `true`  | Send alerts to the contact email.                  |
+| `alerts_to_admins`    | `bool`   | `true`  | Send alerts to subscription admins.                |
 
 ## Outputs
 
@@ -45,6 +75,19 @@ A runnable example lives in [`examples/basic`](examples/basic).
 |---------------|--------------------------------------------------------------------|
 | `pricing_ids` | Map of resource types to their Defender for Cloud pricing IDs.      |
 | `contact_id`  | ID of the security center contact, if one was created.             |
+
+## Development
+
+The test suite runs against a mocked provider — no Azure credentials, no
+network:
+
+```sh
+terraform init -backend=false
+terraform test
+```
+
+`mock_provider` requires Terraform / OpenTofu >= 1.7. That is a contributor-only
+requirement; consumers of the module still only need >= 1.5.
 
 ## License
 
