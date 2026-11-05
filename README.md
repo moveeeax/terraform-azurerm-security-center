@@ -9,7 +9,7 @@ for alert notifications.
 
 ```hcl
 module "security_center" {
-  source = "github.com/moveeeax/terraform-azurerm-security-center"
+  source = "github.com/moveeeax/terraform-azurerm-security-center?ref=v1.0.0"
 
   resource_types = {
     VirtualMachines = "Standard"
@@ -44,13 +44,14 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | Name      | Version          |
 |-----------|------------------|
 | terraform | >= 1.5           |
-| azurerm   | >= 3.30, < 5.0   |
+| azurerm   | >= 3.30, < 6.0   |
 
 `azurerm_security_center_contact` only gained the `name` argument in azurerm
-**3.30.0**; on 3.0.0–3.29.0 this module fails `terraform validate`. The `< 5.0`
+**3.30.0**; on 3.0.0–3.29.0 this module fails `terraform validate`. The `< 6.0`
 ceiling is deliberate — azurerm major releases remove security-center
-resources (4.0 dropped `azurerm_security_center_server_vulnerability_assessment`),
-so 5.x must be opted into knowingly.
+resources (4.0 dropped `azurerm_security_center_server_vulnerability_assessment`,
+5.0 dropped `azurerm_security_center_auto_provisioning`; the module uses
+neither). 5.x has been validated and tested; 6.x must be opted into knowingly.
 
 ## Inputs
 
