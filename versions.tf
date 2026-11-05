@@ -12,9 +12,10 @@ terraform {
       # with "An argument named \"name\" is not expected here."
       # The upper bound is deliberate: major azurerm releases remove
       # security-center resources (4.0 dropped
-      # `azurerm_security_center_server_vulnerability_assessment`), so 5.x must
-      # be opted into explicitly rather than silently.
-      version = ">= 3.30, < 5.0"
+      # `azurerm_security_center_server_vulnerability_assessment`, 5.0 dropped
+      # `azurerm_security_center_auto_provisioning`, neither used here). 5.x
+      # has been checked; 6.x must be opted into explicitly.
+      version = ">= 3.30, < 6.0"
     }
   }
 }
